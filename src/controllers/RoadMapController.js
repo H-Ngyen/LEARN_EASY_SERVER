@@ -5,15 +5,14 @@ async function CreateRoadmap(req, res) {
   try {
     const { topic, userId, level, duration } = req.body;
 
-    const roadmapText = await generateRoadmap(topic);
-
-    const roadmap = HandleString(roadmapText, userId, level, duration);
+    const roadmapText = await generateRoadmap({topic, level, duration});
+    const roadmap = HandleString(roadmapText, userId, topic, level, duration);
 
     // const newRoadmap = new Roadmap(roadmap);
     // await newRoadmap.save();
 
     console.log(roadmap);
-    console.log('roadmapText: ' + roadmapText);
+    // console.log('roadmapText: ' + roadmapText);
 
     res.json({ success: true, roadmap });
   } catch (error) {
