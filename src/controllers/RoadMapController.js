@@ -12,8 +12,6 @@ async function createRoadmap(req, res) {
     await newRoadmap.save();
 
     console.log(roadmap);
-    // console.log('roadmapText: ' + roadmapText);
-
     res.json({ success: true, roadmap });
   } catch (error) {
     console.error(error);
@@ -64,7 +62,7 @@ function HandleString(roadmapText, userId, topic, level, duration) {
   return {
     id: `roadmap1`,
     userId,
-    share: '0', // Mặc định không chia sẻ
+    share: '0',
     topic,
     level,
     duration,
@@ -73,10 +71,24 @@ function HandleString(roadmapText, userId, topic, level, duration) {
   };
 }
 
-async function getRoadmapByUser() {
+async function getRoadmapByUser(req, res) {
   try {
     const userId = req.params.userId;
-    const roadmap = await Roadmap.findById({ userId: userId });
+    const roadmaps = await Roadmap.find({ userId: userId });
+    res.json({ success: true, roadmaps });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to get roadmaps" });
+  }
+}
+
+async function getRoadmapById(req, res) {
+  try {
+    const id = req.params.id;
+    const roadmap = await Roadmap.findOne({ id: id });
+    if (!roadmap) {
+      return res.status(404).json({ success: false, message: 'Roadmap not found' });
+    }
     res.json({ success: true, roadmap });
   } catch (error) {
     console.error(error);
@@ -84,18 +96,19 @@ async function getRoadmapByUser() {
   }
 }
 
-async function getRoadmapByShare() {
+async function getRoadmapByShare(req, res) {
   try {
-    const roadmap = await Roadmap.findById({ share: "1" });
-    res.json({ success: true, roadmap });
+    const roadmaps = await Roadmap.find({ share: "1" });
+    res.json({ success: true, roadmaps });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: "Failed to get roadmap" });
+    res.status(500).json({ success: false, error: "Failed to get shared roadmaps" });
   }
 }
 
 export default {
   createRoadmap,
   getRoadmapByUser,
-  getRoadmapByShare
+  getRoadmapByShare,
+  getRoadmapById
 };
