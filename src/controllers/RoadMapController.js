@@ -1,15 +1,15 @@
 import generateRoadmap from "../middleware/Generate_RoadMap.js";
-// import Roadmap from "../models/Roadmap.js";
+import Roadmap from '../models/roadmap.js';
 
-async function CreateRoadmap(req, res) {
+async function createRoadmap(req, res) {
   try {
     const { topic, userId, level, duration } = req.body;
 
-    const roadmapText = await generateRoadmap({topic, level, duration});
+    const roadmapText = await generateRoadmap({ topic, level, duration });
     const roadmap = HandleString(roadmapText, userId, topic, level, duration);
 
-    // const newRoadmap = new Roadmap(roadmap);
-    // await newRoadmap.save();
+    const newRoadmap = new Roadmap(roadmap);
+    await newRoadmap.save();
 
     console.log(roadmap);
     // console.log('roadmapText: ' + roadmapText);
@@ -63,7 +63,7 @@ function HandleString(roadmapText, userId, topic, level, duration) {
 
   return {
     id: `roadmap1`,
-    idUser: userId,
+    userId,
     share: '0', // Mặc định không chia sẻ
     topic,
     level,
@@ -73,4 +73,29 @@ function HandleString(roadmapText, userId, topic, level, duration) {
   };
 }
 
-export default { CreateRoadmap };
+async function getRoadmapByUser() {
+  try {
+    const userId = req.params.userId;
+    const roadmap = await Roadmap.findById({ userId: userId });
+    res.json({ success: true, roadmap });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to get roadmap" });
+  }
+}
+
+async function getRoadmapByShare() {
+  try {
+    const roadmap = await Roadmap.findById({ share: "1" });
+    res.json({ success: true, roadmap });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to get roadmap" });
+  }
+}
+
+export default {
+  createRoadmap,
+  getRoadmapByUser,
+  getRoadmapByShare
+};

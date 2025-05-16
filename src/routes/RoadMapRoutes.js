@@ -3,6 +3,9 @@ import RoadMapController from '../controllers/RoadMapController.js'
 
 const router = express.Router();
 
-router.post('/', RoadMapController.CreateRoadmap)
+// api/roadmap
+router.get('/', RoadMapController.getRoadmapByUser);
+router.get('/shared', RoadMapController.getRoadmapByShare);
+router.post('/', RoadMapController.createRoadmap);
 
 export default router;
