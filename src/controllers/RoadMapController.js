@@ -24,6 +24,16 @@ function HandleString(roadmapText, userId, topic, level, duration) {
   const nodes = [];
   const edges = [];
 
+  // Định nghĩa vị trí cột (x) cho c1, c2, c3
+  const columnPositions = {
+    c1: 0,
+    c2: 250,
+    c3: 500,
+  };
+
+  // Định nghĩa chu kỳ cột: c2 → c1 → c3 → c1 → c2 → ...
+  const cycle = ['c2', 'c1', 'c3', 'c1'];
+
   lines.forEach((line, index) => {
     const match = line.match(/Step (\d+): (.+?) \| Description: (.+?) \| Depends on: (.+)$/);
     if (!match) {
@@ -34,14 +44,27 @@ function HandleString(roadmapText, userId, topic, level, duration) {
     const [, stepNum, label, description, dependency] = match;
     const idNote = stepNum;
 
+    // Tính vị trí cột (x) dựa trên chu kỳ
+    let column = cycle[index % 4]; // Chu kỳ 4 bước: c2 → c1 → c3 → c1
+
+    // Nếu là step cuối cùng, đảm bảo nằm ở c2
+    if (index === lines.length - 1 && column !== 'c2') {
+      column = 'c2';
+    }
+
+    const x = columnPositions[column];
+
+    // Tính vị trí hàng (y) dựa trên chỉ số index
+    const y = 150 * index; // Dọc xuống, mỗi hàng cách 150px
+
     nodes.push({
       idNote,
       data: {
         label,
-        status: 0,
+        status: '0', // Đảm bảo là chuỗi để khớp với schema
         description,
       },
-      position: { x: 250 * (index % 3), y: 150 * Math.floor(index / 3) },
+      position: { x, y },
     });
 
     if (dependency !== "None") {
