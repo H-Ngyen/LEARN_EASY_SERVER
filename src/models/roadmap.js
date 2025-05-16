@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const roadmapSchema = new mongoose.Schema({
-  id: { type: String, required: true },
+  id: { type: String, required: true, default: () => new mongoose.Types.ObjectId().toString() },
   userId: { type: String, required: true },
   share: { type: String, default: '0', enum: ['0', '1'] }, // 0(!share), 1(share)
   topic: { type: String, require: true },

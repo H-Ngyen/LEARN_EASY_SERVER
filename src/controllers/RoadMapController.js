@@ -9,10 +9,10 @@ async function createRoadmap(req, res) {
     const roadmap = HandleString(roadmapText, userId, topic, level, duration);
 
     const newRoadmap = new Roadmap(roadmap);
-    await newRoadmap.save();
+    const saveRoadmap = await newRoadmap.save();
 
     console.log(roadmap);
-    res.json({ success: true, roadmap });
+    res.json({ success: true, roadmap: saveRoadmap});
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: "Failed to generate roadmap" });
@@ -60,7 +60,6 @@ function HandleString(roadmapText, userId, topic, level, duration) {
   });
 
   return {
-    id: `roadmap1`,
     userId,
     share: '0',
     topic,
