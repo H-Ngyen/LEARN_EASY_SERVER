@@ -1,5 +1,6 @@
 import generateRoadmap from "../middleware/Generate_RoadMap.js";
 import Roadmap from '../models/roadmap.js';
+import User from '../models/user.js'
 
 async function createRoadmap(req, res) {
   try {
@@ -12,7 +13,7 @@ async function createRoadmap(req, res) {
     const saveRoadmap = await newRoadmap.save();
 
     console.log(roadmap);
-    res.json({ success: true, roadmap: saveRoadmap});
+    res.json({ success: true, roadmap: saveRoadmap });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: "Failed to generate roadmap" });
@@ -24,14 +25,12 @@ function HandleString(roadmapText, userId, topic, level, duration) {
   const nodes = [];
   const edges = [];
 
-  // Định nghĩa vị trí cột (x) cho c1, c2, c3
   const columnPositions = {
     c1: 0,
     c2: 250,
     c3: 500,
   };
 
-  // Định nghĩa chu kỳ cột: c2 → c1 → c3 → c1 → c2 → ...
   const cycle = ['c2', 'c1', 'c3', 'c1'];
 
   lines.forEach((line, index) => {
@@ -45,9 +44,9 @@ function HandleString(roadmapText, userId, topic, level, duration) {
     const idNote = stepNum;
 
     // Tính vị trí cột (x) dựa trên chu kỳ
-    let column = cycle[index % 4]; // Chu kỳ 4 bước: c2 → c1 → c3 → c1
+    let column = cycle[index % 4];
 
-    // Nếu là step cuối cùng, đảm bảo nằm ở c2
+    // step cuối nằm ở c2
     if (index === lines.length - 1 && column !== 'c2') {
       column = 'c2';
     }
@@ -118,10 +117,23 @@ async function getRoadmapById(req, res) {
   }
 }
 
-async function getRoadmapByShare(req, res) {
+async function getRoadmapByCommunity(req, res) {
   try {
     const roadmaps = await Roadmap.find({ share: "1" });
-    res.json({ success: true, roadmaps });
+
+    const roadmapsWithAuthor = await Promise.all(
+      roadmaps.map(async (roadmap) => {
+        const user = await User.findOne({ userId: roadmap.userId });
+        return {
+          ...roadmap.toObject(),
+          author: {
+            name: user ? user.name : 'Unknown Author',
+          },
+        };
+      })
+    );
+
+    res.json({ success: true, roadmaps: roadmapsWithAuthor });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: "Failed to get shared roadmaps" });
@@ -131,6 +143,6 @@ async function getRoadmapByShare(req, res) {
 export default {
   createRoadmap,
   getRoadmapByUser,
-  getRoadmapByShare,
+  getRoadmapByCommunity,
   getRoadmapById
 };

@@ -5,7 +5,7 @@ const router = express.Router();
 
 // api/roadmap
 router.get('/user/:userId', RoadMapController.getRoadmapByUser);
-router.get('/shared', RoadMapController.getRoadmapByShare);
+router.get('/community', RoadMapController.getRoadmapByCommunity);
 router.get('/:id', RoadMapController.getRoadmapById);
 router.post('/', RoadMapController.createRoadmap);
 
