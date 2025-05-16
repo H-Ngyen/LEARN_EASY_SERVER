@@ -57,7 +57,113 @@ async function Register(req, res) {
     }
 }
 
-export default {
-    Login,
-    Register
+async function getRanking(req, res) {
+  try {
+    const ranking = await User.aggregate([
+      {
+        $lookup: {
+          from: "roadmaps",
+          let: { userId: "$userId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
+            {
+              $addFields: {
+                isCompleted: {
+                  $eq: [
+                    {
+                      $size: {
+                        $filter: {
+                          input: "$nodes",
+                          as: "node",
+                          cond: { $ne: ["$$node.data.status", "2"] }
+                        }
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            },
+            { $match: { isCompleted: true } }, // Chỉ lấy lộ trình hoàn thành
+            {
+              $project: {
+                score: {
+                  $add: [
+                    {
+                      $switch: {
+                        branches: [
+                          { case: { $eq: ["$level", "0"] }, then: 1 },
+                          { case: { $eq: ["$level", "1"] }, then: 2 },
+                          { case: { $eq: ["$level", "2"] }, then: 3 }
+                        ],
+                        default: 0
+                      }
+                    },
+                    {
+                      $switch: {
+                        branches: [
+                          { case: { $eq: ["$duration", "0"] }, then: 0.25 },
+                          { case: { $eq: ["$duration", "1"] }, then: 0.5 },
+                          { case: { $eq: ["$duration", "2"] }, then: 0.75 }
+                        ],
+                        default: 0
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "completedRoadmaps"
+        }
+      },
+      {
+        $addFields: {
+          totalScore: { $sum: "$completedRoadmaps.score" }
+        }
+      },
+      {
+        $addFields: {
+          rankLevel: {
+            $switch: {
+              branches: [
+                { case: { $gte: ["$totalScore", 175] }, then: "Advanced" },
+                { case: { $gte: ["$totalScore", 100] }, then: "Intermediate" },
+                { case: { $gte: ["$totalScore", 50] }, then: "Fresh" }
+              ],
+              default: "Beginner"
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          userId: 1,
+          name: 1,
+          totalScore: 1,
+          rankLevel: 1
+        }
+      },
+      { $sort: { totalScore: -1 } }
+    ]);
+
+    const rankedList = ranking.map((user, index) => ({
+      rank: index + 1,
+      userId: user.userId,
+      name: user.name,
+      memberRank: user.rankLevel,
+      totalScore: user.totalScore
+    }));
+
+    res.json({ success: true, ranking: rankedList });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Failed to get ranking" });
+  }
 }
+
+export default {
+  Login,
+  Register,
+  getRanking
+};
