@@ -117,15 +117,26 @@ async function getRoadmapById(req, res) {
   }
 }
 
+
 async function getRoadmapByCommunity(req, res) {
   try {
-    const roadmaps = await Roadmap.find({ share: "1" });
+    // Chỉ lấy các trường cần thiết: id, userId, topic, level, duration, downloadCount, createdAt
+    const roadmaps = await Roadmap.find({ share: "1" })
+      .select('id userId topic level duration downloadCount createdAt')
+      .lean(); // Sử dụng lean() để tăng hiệu suất, trả về plain JavaScript objects
 
     const roadmapsWithAuthor = await Promise.all(
       roadmaps.map(async (roadmap) => {
-        const user = await User.findOne({ userId: roadmap.userId });
+        // Tối ưu hóa truy vấn User, chỉ lấy trường name
+        const user = await User.findOne({ userId: roadmap.userId }, 'name').lean();
         return {
-          ...roadmap.toObject(),
+          id: roadmap.id,
+          userId: roadmap.userId,
+          topic: roadmap.topic,
+          level: roadmap.level,
+          duration: roadmap.duration,
+          downloadCount: roadmap.downloadCount || 0,
+          createdAt: roadmap.createdAt,
           author: {
             name: user ? user.name : 'Unknown Author',
           },

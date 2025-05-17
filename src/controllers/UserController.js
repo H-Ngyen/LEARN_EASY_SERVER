@@ -127,9 +127,9 @@ async function getRanking(req, res) {
           rankLevel: {
             $switch: {
               branches: [
-                { case: { $gte: ["$totalScore", 175] }, then: "Advanced" },
-                { case: { $gte: ["$totalScore", 100] }, then: "Intermediate" },
-                { case: { $gte: ["$totalScore", 50] }, then: "Fresh" }
+                { case: { $gte: ["$totalScore", 80] }, then: "Advanced" },
+                { case: { $gte: ["$totalScore", 40] }, then: "Intermediate" },
+                { case: { $gte: ["$totalScore", 15] }, then: "Fresh" }
               ],
               default: "Beginner"
             }
